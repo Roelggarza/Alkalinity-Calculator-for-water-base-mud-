@@ -5,20 +5,38 @@ Cloudflare in front (DNS + WAF + Access email gate). Secrets are generated
 locally, sealed, and pasted directly into Railway — never in chat, screenshots,
 git, or logs.
 
-## Phase 1 — Make the repo private
+## Phase 0 — Fork (dad's own copy)
 
-1. Open `github.com/Roelggarza/Alkalinity-Calculator-for-water-base-mud-` →
-   **Settings** → scroll to **Danger Zone** → **Change visibility** →
-   **Make private** → type the repo name → confirm. A lock icon appears.
-2. Sanity check: the repo should contain only `Alkalinity.py`, `.devcontainer/`,
+The maintainer's repo is `Roelggarza/Alkalinity-Calculator-for-water-base-mud-`.
+Dad works from his own fork — that way he owns it, and every push to his
+`main` auto-redeploys on Railway. (Zipping the code over is a fallback only:
+no history, no auto-deploy, painful updates.)
+
+1. Dad logs into GitHub (his account) → open
+   `github.com/Roelggarza/Alkalinity-Calculator-for-water-base-mud-` →
+   **Fork** → **Create fork**.
+2. Make it private: **Settings** → scroll to **Danger Zone** →
+   **Change visibility** → **Make private** → type the repo name → confirm.
+   A lock icon appears.
+3. Optional but recommended: **Settings → Collaborators → Add people** →
+   add the maintainer's GitHub user, so he can push fixes directly.
+4. Sanity check: the repo should contain only `Alkalinity.py`, `.devcontainer/`,
    and the app files (`app.py`, `pages/`, `utils/`, `data/`, `docs/`).
    The field spreadsheet (real operator data) must never be committed.
+
+## Phase 1 — Harden (one-time check)
+
+v2 already ships hardened (password gate, `.gitignore` covering `.env` and
+`.streamlit/secrets.toml`, no secrets in code). Before deploying, run the
+Codex "Pre-deploy security review" prompt from the bottom of this file and
+confirm it comes back clean.
 
 ## Phase 2 — Railway project
 
 1. At railway.app, log in with the field owner's email (his project).
 2. **New Project → Deploy from GitHub repo** → install the Railway GitHub App →
-   select the private repo.
+   select **dad's fork** (private). Every push to its `main` branch redeploys
+   automatically.
 3. Service → **Settings → Deploy → Custom Start Command**:
    `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
 4. **Settings → Networking → Generate Domain** → note the `*.up.railway.app`
