@@ -11,33 +11,48 @@ One Streamlit app combining two field tools for water-base mud:
 2. **Corrosion & H2S dosing calculator** — 14-modifier dosing model producing
    CT 610 corrosion inhibitor gal/day (clamped 10–75), tiered CT1000 H2S
    scavenger dosing, H2S escalation status, hydraulics, and closest Sidewinder
-   pump timer settings.
+   pump timer settings. Products are specific vendor blends; the blend dosing
+   is confirmed correct.
 3. **Daily treatment log** — entries with auto-computed dosing, inventory
-   tracking (begin + received − used = ending), CSV export/import.
+   tracking (begin + received − used = ending), CSV export/import. Uses
+   Postgres when `DATABASE_URL` is set, otherwise local session storage.
 
 The shared mud check (Pm/Pf/Mf/calcium/hardness) is entered once and used by
 both calculators.
 
-## Run
+## Run locally
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Deploy (Streamlit Community Cloud)
+## Deploy (Railway)
 
-Push to GitHub, then at share.streamlit.io create an app pointing at `app.py`.
-Free tier works fine.
+See `docs/DEPLOY.md` for the full runbook: private repo, Railway + Postgres +
+Redis, Cloudflare in front, sealed secrets.
+
+Quick version:
+
+```bash
+# Railway service start command:
+streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+```
+
+Environment variables:
+
+| Variable       | Source                          | Purpose                        |
+|----------------|---------------------------------|--------------------------------|
+| `DATABASE_URL` | Railway Postgres (auto)         | Shared daily-log storage       |
+| `REDIS_URL`    | Railway Redis (auto)            | Dosing-result cache            |
+| `APP_PASSWORD` | You (sealed, see DEPLOY.md)     | Sign-in gate for the app       |
+| `SECRET_KEY`   | You (sealed)                    | Session signing                |
 
 ## Notes
 
-- Products are **CT 610** (corrosion inhibitor) and **CT1000** (H2S scavenger) —
-  specific vendor blends; the calculator's blend dosing is confirmed correct
-  (spreadsheet notes said CT 510 — that was the typo).
 - The Sidewinder pump-type lookup was fixed vs the spreadsheet (its rows 5–42
   checked the wrong cell for Simplex/Duplex).
 - The H2S scavenger per-ppm chemistry is vendor-proprietary; only the v1 tier
   planning table is modeled here.
-- Daily log data lives in session state (ephemeral). For crew-wide persistence,
-  back it with Google Sheets or a small database.
+- `Alkalinity.py` at the repo root is the original single-file app, kept for
+  reference. The multipage app deploys from `app.py`.
